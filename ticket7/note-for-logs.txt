@@ -1,0 +1,1 @@
+It's the same as Ticket 4, if you have already imported that one, you are good to go, if not, import ticket-4-logs.json from ticket 4.

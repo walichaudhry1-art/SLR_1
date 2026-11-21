@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOC L1 Console | INC-2026-1120</title>
+  <style>
+    :root {
+      --bg-app: #090d16;
+      --bg-panel: #111827;
+      --bg-card: #182234;
+      --bg-code: #060911;
+      --border: #26344d;
+      --text-main: #e5edf8;
+      --text-dim: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-cyan: #2dd4bf;
+      --accent-green: #22c55e;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background: var(--bg-app);
+      color: var(--text-main);
+      line-height: 1.55;
+      padding-bottom: 60px;
+    }
+
+    header {
+      background: linear-gradient(180deg, #121b2e 0%, #0b111e 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 28px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+    }
+
+    .header-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+
+    .badge-soc {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid var(--accent-blue);
+      color: var(--accent-blue);
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .brand h1 { font-size: 1.2rem; font-weight: 700; color: #f8fafc; }
+
+    .pills { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+    .pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+
+    .pill strong { color: var(--text-main); }
+    .pill.score { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+    main {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 22px;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+
+    .panel-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent-blue);
+    }
+
+    .ticket-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .t-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+    }
+
+    .t-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .t-val {
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .sev-high { color: var(--accent-amber); }
+
+    .t-desc {
+      background: var(--bg-code);
+      border-left: 3px solid var(--accent-amber);
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.9rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 20px;
+    }
+
+    ul.guide { margin-left: 18px; color: var(--text-dim); font-size: 0.9rem; }
+    ul.guide li { margin-bottom: 7px; }
+    ul.guide li strong { color: var(--text-main); }
+
+    code {
+      font-family: "Consolas", "Courier New", monospace;
+      color: #7dd3fc;
+      font-size: 0.88em;
+    }
+
+    .spl-bar {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 12px;
+      margin: 6px 0 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      overflow-x: auto;
+    }
+
+    .spl-bar code { color: #67e8f9; font-size: 0.84rem; white-space: nowrap; }
+
+    .btn-copy {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .btn-copy:hover { border-color: var(--accent-blue); color: var(--text-main); }
+
+    .q-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+    }
+
+    .q-card.q-ok { border-color: var(--accent-green); }
+    .q-card.q-bad { border-color: var(--accent-red); }
+
+    .q-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .q-prompt { font-size: 0.96rem; font-weight: 600; color: #f8fafc; }
+
+    .q-pts {
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--accent-blue);
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 0.9rem;
+    }
+
+    input[type="text"]:focus { outline: none; border-color: var(--accent-blue); }
+
+    .hint-row { margin-top: 8px; }
+
+    .btn-hint {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--accent-amber);
+      padding: 4px 11px;
+      border-radius: 5px;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+
+    .btn-hint:hover:not(:disabled) { background: rgba(245, 158, 11, 0.1); }
+    .btn-hint:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .hints-box { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+
+    .hint-msg {
+      background: rgba(245, 158, 11, 0.08);
+      border-left: 3px solid var(--accent-amber);
+      padding: 7px 11px;
+      border-radius: 0 4px 4px 0;
+      font-size: 0.84rem;
+      color: #fde68a;
+    }
+
+    .q-fb {
+      display: none;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+      font-size: 0.86rem;
+    }
+
+    .tag-ok, .tag-bad {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .tag-ok { background: rgba(34, 197, 94, 0.15); color: var(--accent-green); border: 1px solid var(--accent-green); }
+    .tag-bad { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid var(--accent-red); }
+
+    .fb-line { margin-bottom: 4px; color: var(--text-dim); }
+    .fb-line strong { color: var(--text-main); }
+
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #07101d;
+      border: none;
+      padding: 11px 22px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 11px 18px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #results-panel, #conclusion-panel { display: none; }
+
+    .score-box {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+
+    .score-val { font-size: 1.9rem; font-weight: 800; color: var(--accent-cyan); }
+
+    .verdict {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .verdict.pass { background: rgba(34, 197, 94, 0.15); color: var(--accent-green); border: 1px solid var(--accent-green); }
+    .verdict.fail { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid var(--accent-red); }
+
+    .conc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .conc-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+
+    .conc-item h4 {
+      color: var(--accent-cyan);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 5px;
+    }
+
+    .conc-item p, .conc-item ul { font-size: 0.88rem; color: var(--text-main); }
+    .conc-item ul { margin-left: 16px; }
+
+    @media (max-width: 560px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      header { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-wrap">
+    <div class="brand">
+      <span class="badge-soc">SOC L1 Lab</span>
+      <h1>Brute Force Followed by Successful Login</h1>
+    </div>
+    <div class="pills">
+      <div class="pill">Incident: <strong>INC-2026-1120</strong></div>
+      <div class="pill">Difficulty: <strong>Medium</strong></div>
+      <div class="pill">Est. Time: <strong>30–40 mins</strong></div>
+      <div class="pill score">Score: <strong id="hdr-score">0 / 100</strong></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">01 // Mission Brief</div>
+    </div>
+    <p style="color: var(--text-dim); font-size: 0.92rem;">
+      You are investigating an authentication correlation alert for <strong style="color: var(--text-main);">Meridian Transit Group</strong>. Ingest the Splunk JSONL dataset into <code>index=soc</code>, correlate VPN, Windows Security, Sysmon, DNS, and firewall telemetry across the investigation window, distinguish benign authentication noise from compromise, and submit your findings.
+    </p>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">02 // SOC Alert Ticket</div>
+      <span class="pill" style="border-color: var(--accent-amber); color: var(--accent-amber);">Severity: High</span>
+    </div>
+    <div class="ticket-grid">
+      <div class="t-box"><div class="t-label">Incident ID</div><div class="t-val">INC-2026-1120</div></div>
+      <div class="t-box"><div class="t-label">Alert Name</div><div class="t-val">Brute Force Followed by Successful Login</div></div>
+      <div class="t-box"><div class="t-label">Severity</div><div class="t-val sev-high">HIGH</div></div>
+      <div class="t-box"><div class="t-label">Detection Source</div><div class="t-val">SIEM Correlation Rule</div></div>
+      <div class="t-box"><div class="t-label">Alert Timestamp (UTC)</div><div class="t-val">2026-11-20T18:24:15Z</div></div>
+      <div class="t-box"><div class="t-label">Affected Gateway / User</div><div class="t-val">VPN-GW-01 / CORP\r.holloway</div></div>
+      <div class="t-box"><div class="t-label">Initial Indicators</div><div class="t-val">Repeated 4625 failures &rarr; 4624 success</div></div>
+      <div class="t-box"><div class="t-label">Investigation Window</div><div class="t-val">2026-11-20 18:00:00Z – 19:00:00Z</div></div>
+    </div>
+    <div class="t-desc">
+      <strong>Alert Description:</strong> SIEM correlation detected high-volume authentication failures targeting corporate gateway <code>VPN-GW-01</code> (<code>10.10.1.5</code>) followed by a successful logon for <code>CORP\r.holloway</code>. Identify the attacking source IP, confirm compromise scope, trace post-authentication activity, and filter out benign password mistakes.
+    </div>
+  </section>
+
+  <div class="grid-2">
+    <section class="panel">
+      <div class="panel-head"><div class="panel-title">03 // Splunk Setup</div></div>
+      <ul class="guide">
+        <li><strong>Index:</strong> Upload the JSONL file into <code>index=soc</code> with sourcetype <code>_json</code>.</li>
+        <li><strong>Time Window:</strong> Filter <code>2026-11-20 18:00:00</code> to <code>19:00:00 UTC</code> (or <em>All Time</em>).</li>
+        <li><strong>Log Sources:</strong> <code>vpn</code>, <code>wineventlog:security</code>, <code>sysmon</code>, <code>dns</code>, <code>firewall</code>.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><div class="panel-title">04 // Starter SPL Queries</div></div>
+      <p style="font-size: 0.84rem; color: var(--text-dim);">Summarize authentication outcomes by source IP:</p>
+      <div class="spl-bar">
+        <code>index=soc (source="vpn" OR source="wineventlog:security") | stats count by src_ip, event_type, status</code>
+        <button class="btn-copy" onclick="copySPL(this)">Copy</button>
+      </div>
+      <p style="font-size: 0.84rem; color: var(--text-dim);">Timeline of activity for compromised account:</p>
+      <div class="spl-bar">
+        <code>index=soc user="*r.holloway*" | sort _time | table _time host source event_type src_ip dest_ip command_line</code>
+        <button class="btn-copy" onclick="copySPL(this)">Copy</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">05 // Investigation Questions (100 Points)</div>
+      <span style="font-size: 0.84rem; color: var(--text-dim);">Pass threshold: 75 / 100</span>
+    </div>
+    <div id="q-container"></div>
+    <div class="actions">
+      <button class="btn-primary" onclick="gradeLab()">Submit Investigation</button>
+      <button class="btn-secondary" onclick="resetLab()">Reset Lab</button>
+    </div>
+  </section>
+
+  <section class="panel" id="results-panel">
+    <div class="panel-head"><div class="panel-title">06 // Results &amp; Feedback</div></div>
+    <div class="score-box">
+      <div>
+        <div style="font-size: 0.76rem; color: var(--text-dim); text-transform: uppercase;">Final Score</div>
+        <div class="score-val" id="res-score">0 / 100</div>
+      </div>
+      <div id="res-verdict" class="verdict">PENDING</div>
+      <p id="res-msg" style="max-width: 520px; font-size: 0.88rem; color: var(--text-dim);"></p>
+    </div>
+  </section>
+
+  <section class="panel" id="conclusion-panel">
+    <div class="panel-head">
+      <div class="panel-title">07 // Official SOC Analyst Conclusion</div>
+      <span class="tag-bad" style="margin:0;">TRUE POSITIVE — MALICIOUS</span>
+    </div>
+    <div class="conc-grid">
+      <div class="conc-item">
+        <h4>Classification</h4>
+        <p><strong>True Positive (Malicious)</strong> — External password-spray/brute-force intrusion resulting in VPN compromise, RDP lateral pivot, domain enumeration, and blocked data staging.</p>
+      </div>
+      <div class="conc-item">
+        <h4>MITRE ATT&amp;CK</h4>
+        <ul>
+          <li><strong>Credential Access:</strong> T1110 (Brute Force)</li>
+          <li><strong>Initial Access:</strong> T1078 (Valid Accounts)</li>
+          <li><strong>Discovery:</strong> T1087 (Account Discovery)</li>
+        </ul>
+      </div>
+      <div class="conc-item">
+        <h4>Affected Scope</h4>
+        <ul>
+          <li><strong>Attacker IP:</strong> 185.193.88.14</li>
+          <li><strong>Compromised User:</strong> CORP\r.holloway (VPN IP 10.10.99.104)</li>
+          <li><strong>Affected Hosts:</strong> VPN-GW-01, SRV-ERP-02 (10.10.20.45)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="conc-item" style="margin-bottom: 12px;">
+      <h4>Summary &amp; Evidence</h4>
+      <p>
+        Between <strong>18:10:02Z</strong> and <strong>18:23:50Z</strong>, external IP <code>185.193.88.14</code> generated 20 failed authentication attempts against <code>VPN-GW-01</code> across multiple accounts before authenticating as <code>CORP\r.holloway</code> at <strong>18:24:15Z</strong> (assigned VPN IP <code>10.10.99.104</code>). From <code>10.10.99.104</code>, the attacker connected via RDP (port <code>3389</code>) to <code>SRV-ERP-02</code> (<code>10.10.20.45</code>), executed <code>net.exe user /domain</code> and <code>nltest.exe /dclist:corp.local</code>, and archived <code>C:\Users\r.holloway\AppData\Local\Temp\erp_export.zip</code>. Perimeter firewall <code>FW-EDGE-01</code> blocked outbound exfiltration to <code>185.193.88.14:8443</code> at <strong>18:28:40Z</strong>. Earlier failed logons by <code>CORP\d.okafor</code> on <code>WS-ACCT-09</code> at 18:04Z were benign password typos.
+      </p>
+    </div>
+    <div class="conc-item">
+      <h4>Recommended Response</h4>
+      <ul>
+        <li>Terminate active VPN sessions for <code>CORP\r.holloway</code> and reset the account password + MFA tokens.</li>
+        <li>Block <code>185.193.88.14</code> at the perimeter firewall and VPN gateway.</li>
+        <li>Isolate <code>SRV-ERP-02</code> for forensic triage and remove <code>erp_export.zip</code>.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<script>
+  const LAB_DATA = [
+    {
+      id: "q1",
+      pts: 10,
+      prompt: "1. What external source IP address conducted the brute-force authentication attempts against VPN-GW-01?",
+      placeholder: "e.g., 203.0.113.45",
+      hints: [
+        "Aggregate authentication failures by src_ip across source=\"vpn\" or event_id=4625.",
+        "Look for a single external IP failing across multiple usernames between 18:10Z and 18:23Z.",
+        "The IP belongs to the 185.193.88.0/24 block."
+      ],
+      accepted: ["185.193.88.14"],
+      display: "185.193.88.14",
+      explanation: "External IP 185.193.88.14 produced 20 failed login attempts against VPN-GW-01 prior to succeeding at 18:24:15Z.",
+      evidence: "2026-11-20T18:10:02Z..18:23:50Z | host=VPN-GW-01 | src_ip=185.193.88.14 | status=failure",
+      spl: "index=soc host=\"VPN-GW-01\" status=\"failure\" | stats count by src_ip"
+    },
+    {
+      id: "q2",
+      pts: 10,
+      prompt: "2. Which corporate user account was compromised following the brute-force attack?",
+      placeholder: "e.g., CORP\\j.doe",
+      hints: [
+        "Filter VPN-GW-01 logs for status=\"success\" or Windows Security Event ID 4624 from 185.193.88.14.",
+        "Check the user field on the successful logon event at 18:24:15Z.",
+        "The username starts with r.holloway."
+      ],
+      accepted: ["corp\\r.holloway", "r.holloway", "r.holloway@meridiantransit.local"],
+      display: "CORP\\r.holloway",
+      explanation: "After failed attempts against multiple users, 185.193.88.14 authenticated successfully as CORP\\r.holloway at 18:24:15Z.",
+      evidence: "2026-11-20T18:24:15Z | host=VPN-GW-01 | src_ip=185.193.88.14 | user=CORP\\r.holloway | status=success",
+      spl: "index=soc src_ip=\"185.193.88.14\" status=\"success\" | table _time host user assigned_ip"
+    },
+    {
+      id: "q3",
+      pts: 15,
+      prompt: "3. What is the hostname of the gateway/system that received the initial brute-force login attempts?",
+      placeholder: "e.g., VPN-EDGE-02",
+      hints: [
+        "Check the host field on the authentication failure events originating from 185.193.88.14.",
+        "Look at source=\"vpn\" events between 18:10Z and 18:24Z.",
+        "The hostname is VPN-GW-01."
+      ],
+      accepted: ["vpn-gw-01", "10.10.1.5", "vpn-gw-01 (10.10.1.5)"],
+      display: "VPN-GW-01 (10.10.1.5)",
+      explanation: "All external authentication attempts from 185.193.88.14 targeted VPN-GW-01 (10.10.1.5).",
+      evidence: "2026-11-20T18:24:15Z | host=VPN-GW-01 | dest_ip=10.10.1.5 | source=vpn",
+      spl: "index=soc src_ip=\"185.193.88.14\" | stats count by host source"
+    },
+    {
+      id: "q4",
+      pts: 15,
+      prompt: "4. At what exact UTC timestamp did the attacker achieve a successful login? (Format: YYYY-MM-DDTHH:MM:SSZ)",
+      placeholder: "e.g., 2026-11-20T18:24:15Z",
+      hints: [
+        "Search for the first status=\"success\" event associated with src_ip=185.193.88.14.",
+        "Compare the timestamp of the last failed attempt (18:23:50Z) with the successful VPN logon.",
+        "The event occurred at 18:24:15Z."
+      ],
+      accepted: ["2026-11-20t18:24:15z", "18:24:15z", "18:24:15", "2026-11-20 18:24:15z", "2026-11-20 18:24:15"],
+      display: "2026-11-20T18:24:15Z",
+      explanation: "The successful VPN session establishment and corresponding Security Event ID 4624 occurred at 2026-11-20T18:24:15Z.",
+      evidence: "2026-11-20T18:24:15Z | source=vpn | event_type=VPN_Auth | user=CORP\\r.holloway | status=success",
+      spl: "index=soc src_ip=\"185.193.88.14\" | sort _time | table _time source event_type user status"
+    },
+    {
+      id: "q5",
+      pts: 15,
+      prompt: "5. What internal VPN IP address was assigned to the attacker's session upon successful authentication?",
+      placeholder: "e.g., 10.10.99.50",
+      hints: [
+        "Inspect the assigned_ip field on the successful VPN authentication event at 18:24:15Z.",
+        "You can also check the src_ip used by CORP\\r.holloway for internal RDP traffic immediately after 18:24Z.",
+        "The assigned VPN pool IP is in the 10.10.99.0/24 subnet."
+      ],
+      accepted: ["10.10.99.104"],
+      display: "10.10.99.104",
+      explanation: "VPN-GW-01 assigned internal tunnel IP 10.10.99.104 to CORP\\r.holloway upon logon, which was subsequently used to pivot internally.",
+      evidence: "2026-11-20T18:24:15Z | host=VPN-GW-01 | user=CORP\\r.holloway | assigned_ip=10.10.99.104",
+      spl: "index=soc host=\"VPN-GW-01\" user=\"CORP\\\\r.holloway\" status=\"success\" | table _time src_ip assigned_ip"
+    },
+    {
+      id: "q6",
+      pts: 15,
+      prompt: "6. Which internal server did the compromised VPN session pivot to via RDP (TCP port 3389)?",
+      placeholder: "e.g., SRV-DB-01",
+      hints: [
+        "Filter firewall or Windows Security logs for connections originating from VPN IP 10.10.99.104.",
+        "Look for dest_port=3389 or Logon Type 10 (RemoteInteractive) for CORP\\r.holloway after 18:25Z.",
+        "The target server is SRV-ERP-02 (10.10.20.45)."
+      ],
+      accepted: ["srv-erp-02", "10.10.20.45", "srv-erp-02 (10.10.20.45)"],
+      display: "SRV-ERP-02 (10.10.20.45)",
+      explanation: "At 18:25:10Z, 10.10.99.104 connected over TCP/3389 to SRV-ERP-02 (10.10.20.45), confirmed by Security Event ID 4624 (Logon Type 10).",
+      evidence: "2026-11-20T18:25:11Z | host=SRV-ERP-02 | event_id=4624 | logon_type=10 | user=CORP\\r.holloway | src_ip=10.10.99.104",
+      spl: "index=soc src_ip=\"10.10.99.104\" | table _time host source event_type dest_ip dest_port user"
+    },
+    {
+      id: "q7",
+      pts: 10,
+      prompt: "7. What archive filename was staged in r.holloway's Temp folder on SRV-ERP-02 before outbound exfiltration was blocked?",
+      placeholder: "e.g., data.zip",
+      hints: [
+        "Inspect Sysmon FileCreate (event_id=11) or ProcessCreate (event_id=1) events on SRV-ERP-02 after 18:27Z.",
+        "Look for files created under C:\\Users\\r.holloway\\AppData\\Local\\Temp\\.",
+        "The archive is named erp_export.zip."
+      ],
+      accepted: ["erp_export.zip", "c:\\users\\r.holloway\\appdata\\local\\temp\\erp_export.zip"],
+      display: "erp_export.zip (C:\\Users\\r.holloway\\AppData\\Local\\Temp\\erp_export.zip)",
+      explanation: "At 18:27:45Z, Sysmon Event ID 11 on SRV-ERP-02 logged creation of erp_export.zip prior to a blocked outbound transfer attempt to 185.193.88.14:8443.",
+      evidence: "2026-11-20T18:27:45Z | host=SRV-ERP-02 | source=sysmon | event_id=11 | target_filename=C:\\Users\\r.holloway\\AppData\\Local\\Temp\\erp_export.zip",
+      spl: "index=soc host=\"SRV-ERP-02\" source=\"sysmon\" | table _time event_id process_name command_line target_filename"
+    },
+    {
+      id: "q8",
+      pts: 10,
+      prompt: "8. At 18:04Z, CORP\\d.okafor recorded 3 failed logons followed by a success on WS-ACCT-09. Was that activity malicious or benign?",
+      placeholder: "e.g., Benign",
+      hints: [
+        "Compare the source IP, workstation, and logon type of d.okafor's events at 18:04Z with the VPN intrusion.",
+        "Notice d.okafor logged in locally (logon_type=2) from assigned workstation WS-ACCT-09 (10.10.30.18) with status 0xC000006A (wrong password).",
+        "Three mistyped passwords followed by a normal interactive login on the user's own workstation is benign."
+      ],
+      accepted: ["benign", "legitimate", "false positive", "normal"],
+      display: "Benign (Normal user password typo on local workstation)",
+      explanation: "CORP\\d.okafor failed 3 interactive logons (0xC000006A) on local workstation WS-ACCT-09 before succeeding 33 seconds later—an unrelated benign red herring.",
+      evidence: "2026-11-20T18:04:12Z..18:04:45Z | host=WS-ACCT-09 | src_ip=10.10.30.18 | user=CORP\\d.okafor | logon_type=2",
+      spl: "index=soc user=\"*d.okafor*\" | table _time host src_ip event_id logon_type status"
+    }
+  ];
+
+  const hintState = {};
+
+  function renderLab() {
+    const root = document.getElementById("q-container");
+    root.innerHTML = "";
+    LAB_DATA.forEach((q) => {
+      hintState[q.id] = 0;
+      const card = document.createElement("div");
+      card.className = "q-card";
+      card.id = "card-" + q.id;
+      card.innerHTML = `
+        <div class="q-top">
+          <div class="q-prompt">${q.prompt}</div>
+          <div class="q-pts">${q.pts} pts</div>
+        </div>
+        <input type="text" id="in-${q.id}" placeholder="${q.placeholder}" autocomplete="off" />
+        <div class="hint-row">
+          <button type="button" class="btn-hint" id="hbtn-${q.id}" onclick="nextHint('${q.id}')">Reveal Hint (0/${q.hints.length})</button>
+        </div>
+        <div class="hints-box" id="hbox-${q.id}"></div>
+        <div class="q-fb" id="fb-${q.id}"></div>
+      `;
+      root.appendChild(card);
+    });
+  }
+
+  function nextHint(qid) {
+    const q = LAB_DATA.find((x) => x.id === qid);
+    if (!q) return;
+    const i = hintState[qid] || 0;
+    if (i >= q.hints.length) return;
+    const box = document.getElementById("hbox-" + qid);
+    const div = document.createElement("div");
+    div.className = "hint-msg";
+    div.innerHTML = `<strong>Hint ${i + 1}:</strong> ${q.hints[i]}`;
+    box.appendChild(div);
+    hintState[qid] = i + 1;
+    const btn = document.getElementById("hbtn-" + qid);
+    btn.textContent = `Reveal Hint (${hintState[qid]}/${q.hints.length})`;
+    if (hintState[qid] >= q.hints.length) btn.disabled = true;
+  }
+
+  function norm(s) {
+    return s.toLowerCase().trim().replace(/^["'`]+|["'`]+$/g, "").replace(/\s+/g, " ").replace(/[.,;:!?()[\]{}]+$/g, "");
+  }
+
+  function checkAns(raw, list) {
+    const u = norm(raw);
+    if (!u) return false;
+    return list.some((a) => norm(a) === u);
+  }
+
+  function gradeLab() {
+    let total = 0;
+    let correct = 0;
+    LAB_DATA.forEach((q) => {
+      const val = document.getElementById("in-" + q.id).value;
+      const card = document.getElementById("card-" + q.id);
+      const fb = document.getElementById("fb-" + q.id);
+      const ok = checkAns(val, q.accepted);
+      card.classList.remove("q-ok", "q-bad");
+      if (ok) {
+        total += q.pts;
+        correct += 1;
+        card.classList.add("q-ok");
+      } else {
+        card.classList.add("q-bad");
+      }
+      fb.style.display = "block";
+      fb.innerHTML = `
+        <div>${ok ? `<span class="tag-ok">CORRECT (+${q.pts} PTS)</span>` : `<span class="tag-bad">INCORRECT (0 / ${q.pts} PTS)</span>`}</div>
+        <div class="fb-line"><strong>Your Answer:</strong> ${val ? esc(val) : "<em>Blank</em>"}</div>
+        <div class="fb-line"><strong>Expected Answer:</strong> ${esc(q.display)}</div>
+        <div class="fb-line"><strong>Explanation:</strong> ${esc(q.explanation)}</div>
+        <div class="fb-line"><strong>Evidence:</strong> <code>${esc(q.evidence)}</code></div>
+        <div class="fb-line"><strong>Recommended SPL:</strong> <code>${esc(q.spl)}</code></div>
+      `;
+    });
+
+    document.getElementById("hdr-score").textContent = `${total} / 100`;
+    document.getElementById("res-score").textContent = `${total} / 100`;
+    const pass = total >= 75;
+    const v = document.getElementById("res-verdict");
+    v.textContent = pass ? "PASS — ESCALATION READY" : "NEEDS REVIEW (< 75 PTS)";
+    v.className = `verdict ${pass ? "pass" : "fail"}`;
+    document.getElementById("res-msg").textContent = pass
+      ? `Scored ${total}/100 (${correct}/${LAB_DATA.length} correct). Review the analyst conclusion below before escalating.`
+      : `Scored ${total}/100 (${correct}/${LAB_DATA.length} correct). Review the SPL queries above and retry.`;
+
+    document.getElementById("results-panel").style.display = "block";
+    document.getElementById("conclusion-panel").style.display = "block";
+    document.getElementById("results-panel").scrollIntoView({ behavior: "smooth" });
+  }
+
+  function resetLab() {
+    document.getElementById("hdr-score").textContent = "0 / 100";
+    document.getElementById("results-panel").style.display = "none";
+    document.getElementById("conclusion-panel").style.display = "none";
+    renderLab();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function copySPL(btn) {
+    navigator.clipboard.writeText(btn.previousElementSibling.textContent).then(() => {
+      const t = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(() => { btn.textContent = t; }, 1200);
+    });
+  }
+
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  renderLab();
+</script>
+</body>
+</html>
